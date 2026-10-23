@@ -1,34 +1,33 @@
 /* =========================================================
    POCKET PLAN SERVICE WORKER
    ---------------------------------------------------------
-   - Precaches the app shell (skips any missing files).
-   - Network-first for HTML so content updates ship.
-   - Cache-first for static assets.
-   - Ignores cross-origin requests.
-   - Never caches failed responses.
+   - Precaches the app shell (skips missing files).
+   - Network-first HTML, cache-first assets.
+   - Waits for SKIP_WAITING message before activating, so
+     the app can prompt the user to refresh.
    ========================================================= */
 
 const CACHE = "pocket-plan-v4";
 const SHELL = [
   "/",
   "/index.html",
-  "/manifest.json", // ← verify this path
+  "/manifest.json",
+  "/assets/icons/favicon.svg",
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE)
-      .then((cache) =>
-        Promise.all(
-          SHELL.map((url) =>
-            cache.add(url).catch((err) => {
-              console.warn("[SW] skipped precache:", url, err);
-            }),
-          ),
+    caches.open(CACHE).then((cache) =>
+      Promise.all(
+        SHELL.map((url) =>
+          cache.add(url).catch((err) => {
+            console.warn("[SW] skipped precache:", url, err);
+          }),
         ),
-      )
-      .then(() => self.skipWaiting()),
+      ),
+    ),
+    // Note: NO self.skipWaiting() here — the new SW waits
+    // until the page sends SKIP_WAITING (after user clicks Refresh)
   );
 });
 
@@ -45,6 +44,13 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+/* The update modal sends this after the user clicks "Refresh now" */
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
@@ -53,7 +59,6 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.protocol === "blob:") return;
 
-  /* Network-first for HTML so content stays fresh */
   const isHtml =
     request.mode === "navigate" ||
     request.headers.get("accept")?.includes("text/html");
@@ -75,7 +80,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  /* Cache-first for static assets */
   event.respondWith(
     caches.match(request).then(
       (cached) =>

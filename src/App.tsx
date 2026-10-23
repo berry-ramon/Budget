@@ -3,6 +3,7 @@ import { InstallPrompt } from "./components/InstallPrompt";
 import { usePWAInstall } from "./hooks/usePWAInstall";
 import { CurrencyPicker } from "./components/CurrencyPicker";
 import { getCurrencySymbol } from "./lib/currencies";
+import { UpdatePrompt } from "./components/UpdatePrompt";
 
 type IconName =
   | "lists"
@@ -923,6 +924,8 @@ export default function App() {
         />
       )}
       <InstallPrompt enabled={true} />
+      <UpdatePrompt />
+
       {toast && (
         <div className="toast">
           <Icon name="check" />
