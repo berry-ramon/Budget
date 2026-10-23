@@ -2626,3 +2626,286 @@ body.install-prompt-visible .fab-wrap {
   background: var(--border);
   color: var(--text);
 }
+
+/* =========================================================
+   CURRENCY PICKER
+   ========================================================= */
+
+.currency-trigger {
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.currency-trigger:hover {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+}
+
+.currency-trigger:focus-visible {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+  outline: 0;
+}
+
+.currency-flag {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+  font-family:
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+
+.currency-info {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.currency-info b {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.currency-info small {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.currency-trigger .icon {
+  color: var(--muted);
+  transform: rotate(90deg);
+  flex-shrink: 0;
+}
+
+/* ---------- Backdrop ---------- */
+
+.currency-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  animation: fadeIn 180ms ease;
+}
+
+/* ---------- Sheet ---------- */
+
+.currency-sheet {
+  width: min(440px, 100%);
+  max-height: min(80dvh, 620px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: 20px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+  overflow: hidden;
+  animation: modalIn 280ms cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+
+.currency-sheet > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.currency-sheet > header h2 {
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.currency-sheet > header button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.currency-sheet > header button:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+/* ---------- Search ---------- */
+
+.currency-search {
+  margin: 12px 16px 8px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 14px;
+  outline: 0;
+  flex-shrink: 0;
+  transition:
+    border 150ms ease,
+    background 150ms ease;
+}
+
+.currency-search:focus {
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+/* ---------- List ---------- */
+
+.currency-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 8px 12px;
+  overscroll-behavior: contain;
+}
+
+.currency-section-label {
+  padding: 12px 10px 6px;
+  font-size: 10px;
+  font-weight: 750;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+}
+
+.currency-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 26px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.currency-row:hover {
+  background: var(--surface-soft);
+}
+
+.currency-row.selected {
+  background: var(--primary-soft);
+}
+
+.currency-row .currency-flag {
+  font-size: 20px;
+}
+
+.currency-row-info {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.currency-row-info b {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.currency-row-info small {
+  font-size: 10.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.currency-row.selected .currency-row-info b,
+.currency-row.selected .currency-row-info small {
+  color: var(--primary);
+}
+
+.currency-row-code {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--numbers);
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.currency-row.selected .currency-row-code {
+  color: var(--primary);
+}
+
+.currency-row-check {
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+}
+
+.currency-empty {
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ---------- Mobile: bottom sheet ---------- */
+
+@media (max-width: 767px) {
+  .currency-backdrop {
+    place-items: end center;
+    padding: 0;
+  }
+
+  .currency-sheet {
+    width: 100%;
+    max-height: 90dvh;
+    border-radius: 20px 20px 0 0;
+    animation-name: sheetIn;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .currency-row {
+    padding: 12px 10px;
+    min-height: 56px;
+  }
+}

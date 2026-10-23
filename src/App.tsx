@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { usePWAInstall } from "./hooks/usePWAInstall";
+import { CurrencyPicker } from "./components/CurrencyPicker";
 
 type IconName =
   | "lists"
@@ -146,7 +147,8 @@ function detectCurrency() {
     CA: "CAD",
     AU: "AUD",
   };
-  return map[region] || "USD";
+  // Fallback is now KES instead of USD
+  return map[region] || "KES";
 }
 
 function uid() {
@@ -543,20 +545,11 @@ function Setup({
           <p>You can change these anytime in Settings.</p>
         </div>
         <div className="setup-fields">
-          <SelectField
+          <CurrencyPicker
             label="Your currency"
             value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-          >
-            {currencyOptions().map((code) => (
-              <option value={code} key={code}>
-                {code} -{" "}
-                {new Intl.DisplayNames([navigator.language], {
-                  type: "currency",
-                }).of(code)}
-              </option>
-            ))}
-          </SelectField>
+            onChange={setCurrency}
+          />
           <fieldset className="theme-choice">
             <legend>Theme</legend>
             {(["system", "light", "dark"] as const).map((choice) => (
@@ -1779,15 +1772,12 @@ function SettingsView({
               <b>Currency</b>
               <span>Used for new lists</span>
             </div>
-            <select
-              aria-label="Currency"
-              value={data.currency}
-              onChange={(e) => update({ currency: e.target.value })}
-            >
-              {currencyOptions().map((code) => (
-                <option key={code}>{code}</option>
-              ))}
-            </select>
+            <div style={{ width: 200 }}>
+              <CurrencyPicker
+                value={data.currency}
+                onChange={(code) => update({ currency: code })}
+              />
+            </div>
           </div>
           <div className="setting-row">
             <div>
