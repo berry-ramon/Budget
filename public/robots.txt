@@ -1,7 +1,7 @@
 # =========================================================
-# POCKET PLAN — robots.txt
+# POCKET PLAN - robots.txt
 # https://budget.brandonkimathi.top
-# Personal tool — kept out of search engines
+# Personal tool - kept out of search engines
 # =========================================================
 
 User-agent: *

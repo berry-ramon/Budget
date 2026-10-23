@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { InstallPrompt } from "./components/InstallPrompt";
+import { usePWAInstall } from "./hooks/usePWAInstall";
 
 type IconName =
   | "lists"
@@ -548,7 +550,7 @@ function Setup({
           >
             {currencyOptions().map((code) => (
               <option value={code} key={code}>
-                {code} —{" "}
+                {code} -{" "}
                 {new Intl.DisplayNames([navigator.language], {
                   type: "currency",
                 }).of(code)}
@@ -611,7 +613,7 @@ export default function App() {
       setLoaded(true);
     });
     navigator.storage?.persist?.();
-    if ("serviceWorker" in navigator)
+    if ("serviceWorker" in navigator && import.meta.env.PROD)
       navigator.serviceWorker.register("/sw.js").catch(() => undefined);
   }, []);
 
@@ -930,6 +932,7 @@ export default function App() {
           }}
         />
       )}
+      <InstallPrompt enabled={true} />
       {toast && (
         <div className="toast">
           <Icon name="check" />
@@ -1819,6 +1822,14 @@ function SettingsView({
           </div>
         </section>
         <section className="settings-group">
+          <h2>Install App</h2>
+          <p>
+            Add Pocket Plan to your home screen for faster access and offline
+            use.
+          </p>
+          <InstallButton />
+        </section>
+        <section className="settings-group">
           <h2>Backup</h2>
           <p className="warning">
             Your data is only on this device. Export a backup regularly in case
@@ -2177,4 +2188,51 @@ async function saveData(data: AppData) {
   } catch {
     /* Private browsing may block IndexedDB. */
   }
+}
+
+function InstallButton() {
+  const { canInstall, isInstalled, isIOS, promptInstall } = usePWAInstall();
+  const [feedback, setFeedback] = useState("");
+
+  const handleClick = async () => {
+    if (isIOS) {
+      setFeedback("On iOS: tap Share → Add to Home Screen.");
+      return;
+    }
+    const outcome = await promptInstall();
+    if (outcome === "accepted") {
+      setFeedback("Installed!");
+    } else if (outcome === "dismissed") {
+      setFeedback("Install cancelled.");
+    } else {
+      setFeedback(
+        "Your browser doesn't support one-click install. Use the browser menu → Install app.",
+      );
+    }
+  };
+
+  if (isInstalled) {
+    return (
+      <p style={{ color: "var(--primary)", fontWeight: 600 }}>
+        ✓ Pocket Plan is installed
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <button
+        className="button secondary"
+        onClick={handleClick}
+        disabled={!canInstall}
+      >
+        <Icon name="download" /> Install Pocket Plan
+      </button>
+      {feedback && (
+        <p style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>
+          {feedback}
+        </p>
+      )}
+    </>
+  );
 }

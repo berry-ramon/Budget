@@ -2397,3 +2397,232 @@ kbd {
     }
   }
 }
+
+/* =========================================================
+   PWA INSTALL PROMPT - compact pill
+   ========================================================= */
+
+.install-prompt {
+  position: fixed;
+  z-index: 55;
+  left: 12px;
+  right: 12px;
+  bottom: calc(74px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 8px;
+  border-radius: 100px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, 0.12),
+    0 2px 6px rgba(15, 23, 42, 0.06);
+  animation: installPromptIn 320ms cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+
+@keyframes installPromptIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+}
+
+.install-prompt-icon {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--primary);
+  color: white;
+}
+
+.install-prompt-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.install-prompt-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.install-prompt-cta {
+  flex: 0 0 auto;
+  border: 0;
+  background: var(--primary);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    transform 150ms ease;
+}
+
+.install-prompt-cta:hover {
+  background: color-mix(in srgb, var(--primary) 88%, black);
+}
+
+.install-prompt-cta:active {
+  transform: scale(0.97);
+}
+
+.install-prompt-dismiss {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.install-prompt-dismiss:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.install-prompt-dismiss svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Hide the FAB while the prompt is visible so they don't overlap */
+body.install-prompt-visible .fab-wrap {
+  display: none;
+}
+
+/* Desktop: pill anchored bottom-right */
+@media (min-width: 768px) {
+  .install-prompt {
+    left: auto;
+    right: 20px;
+    bottom: 20px;
+    width: auto;
+    max-width: 340px;
+    padding: 8px 8px 8px 10px;
+    gap: 12px;
+  }
+
+  .install-prompt-text {
+    font-size: 13px;
+  }
+
+  .install-prompt-cta {
+    padding: 8px 16px;
+    font-size: 12.5px;
+  }
+}
+
+/* =========================================================
+   iOS INSTALL INSTRUCTIONS (unchanged)
+   ========================================================= */
+
+.install-ios-hint {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(6px);
+  animation: installIosFade 200ms ease;
+}
+
+@keyframes installIosFade {
+  from {
+    opacity: 0;
+  }
+}
+
+.install-ios-card {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  padding: 24px;
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.32);
+  animation: installIosIn 320ms cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+
+@keyframes installIosIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+}
+
+.install-ios-card h3 {
+  font-size: 18px;
+  font-weight: 750;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+
+.install-ios-card ol {
+  padding-left: 20px;
+  margin: 0 0 16px;
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.install-ios-card ol strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.install-ios-card p {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.install-ios-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.install-ios-close:hover {
+  background: var(--border);
+  color: var(--text);
+}

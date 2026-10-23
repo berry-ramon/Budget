@@ -44,28 +44,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "/assets/icons/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
     }
   ],
   "screenshots": [
     {
       "src": "/assets/icons/screenshot-mobile.png",
-      "sizes": "1080x1920",
+      "sizes": "389x874",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Pocket Plan on mobile — plan a list, see what's left"
+      "label": "Pocket Plan on mobile - plan a list, see what's left"
     },
     {
       "src": "/assets/icons/screenshot-desktop.png",
-      "sizes": "1920x1080",
+      "sizes": "1920x964",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Pocket Plan on desktop — full planner with live budget meter"
+      "label": "Pocket Plan on desktop - full planner with live budget meter"
     }
   ],
   "shortcuts": [

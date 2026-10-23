@@ -8,12 +8,11 @@
    - Never caches failed responses.
    ========================================================= */
 
-const CACHE = "pocket-plan-v2";
+const CACHE = "pocket-plan-v4";
 const SHELL = [
   "/",
   "/index.html",
-  "/manifest.json",
-  "/assets/icons/favicon.svg",
+  "/manifest.json", // ← verify this path
 ];
 
 self.addEventListener("install", (event) => {
