@@ -1,0 +1,134 @@
+/* =========================================================
+   SPENDING BREAKDOWN — needs/wants/maybe/bought chart
+   ========================================================= */
+
+.spending-card {
+  grid-column: 1 / -1;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.spending-card h3 {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.spending-card > p {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+
+.spending-bars {
+  display: grid;
+  gap: 14px;
+}
+
+.spending-bar {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.spending-bar-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.spending-bar-label i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.spending-bar-track {
+  height: 10px;
+  background: var(--surface-soft);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.spending-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transform-origin: left;
+  animation: barFill 500ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+@keyframes barFill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.spending-bar-value {
+  font-family: var(--numbers);
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text);
+  text-align: right;
+  min-width: 70px;
+}
+
+/* ---------- Color variants ---------- */
+
+.spending-bar.needs .spending-bar-label i,
+.spending-bar.needs .spending-bar-fill {
+  background: var(--primary-bright);
+}
+
+.spending-bar.wants .spending-bar-label i,
+.spending-bar.wants .spending-bar-fill {
+  background: var(--gold);
+}
+
+.spending-bar.maybe .spending-bar-label i,
+.spending-bar.maybe .spending-bar-fill {
+  background: var(--violet);
+}
+
+.spending-bar.bought .spending-bar-label i,
+.spending-bar.bought .spending-bar-fill {
+  background: var(--primary);
+}
+
+.spending-bar.needs .spending-bar-label {
+  color: var(--primary-bright);
+}
+
+.spending-bar.wants .spending-bar-label {
+  color: var(--gold);
+}
+
+.spending-bar.maybe .spending-bar-label {
+  color: var(--violet);
+}
+
+.spending-bar.bought .spending-bar-label {
+  color: var(--primary);
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 767px) {
+  .spending-card {
+    padding: 18px;
+  }
+
+  .spending-bar {
+    grid-template-columns: 68px 1fr auto;
+    gap: 8px;
+  }
+
+  .spending-bar-value {
+    font-size: 11px;
+    min-width: 60px;
+  }
+}

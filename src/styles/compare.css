@@ -1,0 +1,271 @@
+/* =========================================================
+   COMPARE — page + cards, responsive
+   ========================================================= */
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.compare-card {
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.compare-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+.compare-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--primary);
+  font-size: 10.5px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.compare-card header .icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.compare-card h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 10px 0 3px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compare-card > p {
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compare-card > strong {
+  display: block;
+  font-family: var(--numbers);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 14px;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+/* ---------- Fit result ---------- */
+
+.fit-result {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  color: var(--primary);
+  background: var(--primary-soft);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: auto; /* pushes to bottom of flex card */
+  font-family: var(--numbers);
+}
+
+.fit-result.over {
+  color: var(--coral);
+  background: var(--coral-soft);
+}
+
+/* ---------- Clickable "Enter what you have" prompt ---------- */
+
+.fit-result-prompt {
+  cursor: pointer;
+  border: 1px dashed color-mix(in srgb, var(--primary) 40%, var(--border));
+  background: transparent;
+  color: var(--primary);
+  font-family: inherit;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.fit-result-prompt:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.fit-result-prompt:active {
+  transform: scale(0.98);
+}
+
+/* ---------- "If I have" input field ---------- */
+
+.compare-input-field {
+  cursor: text;
+}
+
+.compare-input-field input {
+  cursor: text;
+}
+
+/* =========================================================
+   TABLET — 3 columns get tight, drop to 2
+   ========================================================= */
+
+@media (max-width: 1023px) {
+  .compare-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .compare-card {
+    padding: 16px;
+  }
+
+  .compare-card > strong {
+    font-size: 20px;
+  }
+}
+
+/* =========================================================
+   MOBILE — vertical stack, compact cards
+   ========================================================= */
+
+@media (max-width: 767px) {
+  .compare-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .compare-card {
+    padding: 14px 16px;
+    border-radius: 14px;
+  }
+
+  .compare-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .compare-card header {
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+  }
+
+  .compare-card header .icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .compare-card h2 {
+    font-size: 15px;
+    margin: 6px 0 2px;
+  }
+
+  .compare-card > p {
+    font-size: 10.5px;
+    margin-bottom: 10px;
+  }
+
+  .compare-card > strong {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  .fit-result {
+    padding: 7px 10px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+
+  /* Compact layout — header + price on same row */
+  .compare-card-mobile-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .compare-card-mobile-row > strong {
+    margin: 0;
+    font-size: 19px;
+  }
+}
+
+/* =========================================================
+   VERY NARROW (< 360px) — even tighter
+   ========================================================= */
+
+@media (max-width: 360px) {
+  .compare-grid {
+    gap: 8px;
+  }
+
+  .compare-card {
+    padding: 12px 14px;
+  }
+
+  .compare-card h2 {
+    font-size: 14px;
+  }
+
+  .compare-card > strong {
+    font-size: 18px;
+  }
+
+  .fit-result {
+    font-size: 10.5px;
+    padding: 6px 8px;
+  }
+}
+
+.compare-card-mobile-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 10px 0 3px;
+}
+
+.compare-card-mobile-row h2 {
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+}
+
+.compare-card-mobile-row > strong {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 22px;
+  font-family: var(--numbers);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}

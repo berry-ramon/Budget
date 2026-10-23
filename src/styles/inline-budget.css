@@ -1,0 +1,387 @@
+/* =========================================================
+   BUDGET METER — compact, mobile-first, no wrapping
+   ========================================================= */
+
+.budget-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--border));
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--surface), var(--primary-soft));
+  position: relative;
+  overflow: hidden;
+  /* NO min-height — content determines height */
+}
+
+/* Decorative circle stays but pushed further out so it never overlaps content */
+.budget-meter::before {
+  content: "";
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  right: -70px;
+  bottom: -90px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary-bright) 8%, transparent);
+  pointer-events: none;
+}
+
+.budget-meter.near {
+  background: linear-gradient(135deg, var(--surface), var(--gold-soft));
+}
+
+.budget-meter.over {
+  background: linear-gradient(135deg, var(--surface), var(--coral-soft));
+}
+
+/* ---------- Input row — NO wrap, stays horizontal ---------- */
+
+.meter-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.meter-budget-input {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-soft);
+  transition:
+    border 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.meter-budget-input:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.meter-budget-input > span:first-child {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.meter-budget-symbol {
+  color: var(--muted);
+  font-family: var(--numbers);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.meter-budget-input input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--numbers);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 0;
+}
+
+.meter-budget-input input::placeholder {
+  color: var(--muted);
+  font-weight: 500;
+  opacity: 0.45;
+}
+
+/* ---------- Status chip — stays inline ---------- */
+
+.meter-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: var(--numbers);
+  letter-spacing: 0.01em;
+  transition: background 200ms ease;
+}
+
+.meter-status-chip.left {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.meter-status-chip.over {
+  background: var(--coral-soft);
+  color: var(--coral);
+}
+
+.meter-status-chip.near {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.meter-status-chip.neutral {
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+
+.meter-status-chip i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ---------- Hide/show button — small circle, never wraps ---------- */
+
+.meter-hide-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  transition: 150ms ease;
+}
+
+.meter-hide-btn:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.meter-hide-btn:active {
+  transform: scale(0.94);
+}
+
+/* ---------- Meter body — copy + ring side by side ---------- */
+
+.meter-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.meter-copy {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.meter-copy > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.meter-copy strong {
+  font-size: 24px;
+  letter-spacing: -0.03em;
+  color: var(--primary);
+  font-family: var(--numbers);
+  line-height: 1.15;
+}
+
+.budget-meter.near .meter-copy strong {
+  color: var(--gold);
+}
+
+.budget-meter.over .meter-copy strong {
+  color: var(--coral);
+}
+
+.meter-copy small {
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+/* ---------- Ring — smaller, sharper ---------- */
+
+.meter-ring {
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--primary-bright) var(--progress),
+    color-mix(in srgb, var(--border) 65%, transparent) 0
+  );
+  display: grid;
+  place-items: center;
+  transition: 600ms ease;
+}
+
+.near .meter-ring {
+  background: conic-gradient(var(--gold) var(--progress), var(--border) 0);
+}
+
+.over .meter-ring {
+  background: conic-gradient(var(--coral) var(--progress), var(--border) 0);
+  animation: pulse 500ms ease-out;
+}
+
+@keyframes pulse {
+  50% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--coral) 12%, transparent);
+  }
+}
+
+.meter-ring::before {
+  content: "";
+  grid-area: 1/1;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.meter-ring span {
+  grid-area: 1/1;
+  z-index: 1;
+  color: var(--primary);
+  display: grid;
+  place-items: center;
+}
+
+.meter-ring span .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---------- Mobile — even tighter ---------- */
+
+@media (max-width: 767px) {
+  .budget-meter {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .meter-input-row {
+    gap: 6px;
+  }
+
+  .meter-budget-input {
+    min-height: 38px;
+    padding: 0 9px;
+    gap: 6px;
+  }
+
+  .meter-budget-input input {
+    font-size: 14px;
+  }
+
+  .meter-budget-input > span:first-child {
+    font-size: 9px;
+  }
+
+  .meter-status-chip {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+
+  .meter-hide-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .meter-copy strong {
+    font-size: 20px;
+  }
+
+  .meter-copy > span {
+    font-size: 10px;
+  }
+
+  .meter-copy small {
+    font-size: 10px;
+  }
+
+  .meter-ring {
+    width: 56px;
+    height: 56px;
+  }
+
+  .meter-ring::before {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+/* ---------- Very narrow phones — stack chip below input ---------- */
+
+@media (max-width: 380px) {
+  .meter-input-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .meter-budget-input {
+    flex: 1 1 100%;
+  }
+
+  .meter-status-chip {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+.meter-hide-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: 150ms ease;
+}
+
+.meter-hide-btn:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.meter-hide-btn:active {
+  transform: scale(0.94);
+}
+
+.meter-hide-btn .icon {
+  width: 16px;
+  height: 16px;
+}

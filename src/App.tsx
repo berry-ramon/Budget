@@ -1,8 +1,21 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  useCallback,
+} from "react";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { usePWAInstall } from "./hooks/usePWAInstall";
 import { CurrencyPicker } from "./components/CurrencyPicker";
 import { getCurrencySymbol } from "./lib/currencies";
+import { Toast } from "./components/Toast";
+import { QuantityInput } from "./components/QuantityInput";
+import { ItemEditModal } from "./components/ItemEditModal";
+import { ListMenu } from "./components/ListMenu";
+import { ListSwitcher } from "./components/ListSwitcher";
+import { SpendingBreakdown } from "./components/SpendingBreakdown";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 
 type IconName =
@@ -28,7 +41,9 @@ type IconName =
   | "spark"
   | "cart"
   | "gift"
-  | "market";
+  | "market"
+  | "eye"
+  | "eye-off";
 
 type Tag = "Need" | "Want" | "Maybe";
 type ListType =
@@ -46,6 +61,7 @@ type Item = {
   quantity: number;
   tag: Tag;
   removed?: boolean;
+  bought?: boolean;
 };
 
 type PlanList = {
@@ -175,7 +191,15 @@ function formatMoney(value: number, currency: string, hidden = false) {
 
 function listTotal(list: PlanList, needsOnly = false) {
   return list.items
-    .filter((item) => !item.removed && (!needsOnly || item.tag === "Need"))
+    .filter(
+      (item) =>
+        !item.removed && !item.bought && (!needsOnly || item.tag === "Need"),
+    )
+    .reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+function listSpent(list: PlanList) {
+  return list.items
+    .filter((item) => item.bought && !item.removed)
     .reduce((sum, item) => sum + item.price * item.quantity, 0);
 }
 
@@ -263,6 +287,18 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
       <>
         <path d="M12 3v12M7 10l5 5 5-5" />
         <path d="M5 21h14" />
+      </>
+    ),
+    eye: (
+      <>
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+        <circle cx="12" cy="12" r="3" />
+      </>
+    ),
+    "eye-off": (
+      <>
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+        <line x1="1" y1="1" x2="23" y2="23" />
       </>
     ),
     upload: (
@@ -598,6 +634,9 @@ export default function App() {
   const selected =
     data.lists.find((list) => list.id === selectedId) || data.lists[0];
 
+  const dismissToast = useCallback(() => setToast(""), []);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+
   useEffect(() => {
     loadData().then((stored) => {
       if (stored) setData(stored);
@@ -686,6 +725,30 @@ export default function App() {
     setToast("Moved to Removed");
   }
 
+  function duplicateList(listId: string) {
+    const source = data.lists.find((l) => l.id === listId);
+    if (!source) return;
+    const copy: PlanList = {
+      ...source,
+      id: uid(),
+      name: `${source.name} (copy)`,
+      date: new Date().toISOString().slice(0, 10),
+      items: source.items.map((i) => ({ ...i, id: uid() })),
+    };
+    update({ lists: [copy, ...data.lists] });
+    setSelectedId(copy.id);
+    setToast("List duplicated");
+  }
+
+  function deleteList(listId: string) {
+    update({ lists: data.lists.filter((l) => l.id !== listId) });
+    if (selectedId === listId) setSelectedId(null);
+    setToast("List deleted");
+  }
+
+  function toggleHide() {
+    update({ hideAmounts: !data.hideAmounts });
+  }
   if (!loaded)
     return (
       <div className="splash">
@@ -781,16 +844,6 @@ export default function App() {
                 update({ theme: data.theme === "dark" ? "light" : "dark" })
               }
             />
-            {view === "Lists" && (
-              <Button
-                className="primary add-desktop"
-                icon="plus"
-                disabled={!selected}
-                onClick={() => setModal("item")}
-              >
-                Add item <kbd>A</kbd>
-              </Button>
-            )}
             <IconButton
               label="Settings"
               icon="settings"
@@ -811,6 +864,10 @@ export default function App() {
               updateList={updateList}
               removeItem={removeItem}
               hidden={data.hideAmounts}
+              onEditItem={setEditingItemId}
+              onDuplicateList={duplicateList}
+              onDeleteList={deleteList}
+              onToggleHide={toggleHide}
             />
           )}
           {view === "Compare" && (
@@ -923,19 +980,49 @@ export default function App() {
           }}
         />
       )}
+
+      {editingItemId &&
+        selected &&
+        (() => {
+          const editing = selected.items.find((i) => i.id === editingItemId);
+          if (!editing) return null;
+          return (
+            <ItemEditModal
+              item={{
+                id: editing.id,
+                name: editing.name,
+                price: editing.price,
+                quantity: editing.quantity,
+                tag: editing.tag,
+              }}
+              currencySymbol={getCurrencySymbol(selected.currency)}
+              parseAmount={parseAmount}
+              onSave={(next) => {
+                updateList(selected.id, (list) => ({
+                  ...list,
+                  items: list.items.map((i) =>
+                    i.id === next.id ? { ...i, ...next } : i,
+                  ),
+                }));
+                setEditingItemId(null);
+                setToast("Item updated");
+              }}
+              onDelete={() => {
+                updateList(selected.id, (list) => ({
+                  ...list,
+                  items: list.items.filter((i) => i.id !== editingItemId),
+                }));
+                setEditingItemId(null);
+                setToast("Item deleted");
+              }}
+              onClose={() => setEditingItemId(null)}
+            />
+          );
+        })()}
       <InstallPrompt enabled={true} />
       <UpdatePrompt />
 
-      {toast && (
-        <div className="toast">
-          <Icon name="check" />
-          <span>{toast}</span>
-          <Button className="ghost" onClick={() => setToast("")}>
-            Dismiss
-          </Button>
-          <i />
-        </div>
-      )}
+      {toast && <Toast message={toast} onDismiss={dismissToast} />}
     </div>
   );
 }
@@ -950,6 +1037,10 @@ function ListsView({
   updateList,
   removeItem,
   hidden,
+  onEditItem,
+  onDuplicateList,
+  onDeleteList,
+  onToggleHide,
 }: {
   data: AppData;
   lists: PlanList[];
@@ -960,17 +1051,36 @@ function ListsView({
   updateList: (id: string, transform: (list: PlanList) => PlanList) => void;
   removeItem: (id: string) => void;
   hidden: boolean;
+  onEditItem: (id: string) => void;
+  onDuplicateList: (id: string) => void;
+  onDeleteList: (id: string) => void;
+  onToggleHide: () => void;
 }) {
   if (!data.lists.length)
     return (
       <EmptyLists createQuick={createQuick} onNew={() => setModal("list")} />
     );
+
   const totalPlanned = data.lists.reduce(
     (sum, list) => sum + listTotal(list),
     0,
   );
+
   return (
     <div className="lists-layout">
+      {/* Mobile-only list switcher */}
+      {selected && (
+        <ListSwitcher
+          lists={data.lists.map((l) => ({
+            id: l.id,
+            name: l.name,
+            type: l.type,
+          }))}
+          selectedId={selected.id}
+          onSelect={setSelected}
+        />
+      )}
+
       <section className="list-index">
         <div className="month-strip">
           <div>
@@ -1000,7 +1110,9 @@ function ListsView({
             />
           ))}
         </div>
+        {/* ⚠️ REMOVED: the stray item-row block that was here */}
       </section>
+
       {selected && (
         <ListDetail
           list={selected}
@@ -1008,8 +1120,13 @@ function ListsView({
           update={(transform) => updateList(selected.id, transform)}
           addItem={() => setModal("item")}
           removeItem={removeItem}
+          onEditItem={onEditItem}
+          onDuplicateList={() => onDuplicateList(selected.id)}
+          onDeleteList={() => onDeleteList(selected.id)}
+          onToggleHide={onToggleHide}
         />
       )}
+
       {selected && (
         <SummaryPanel
           list={selected}
@@ -1114,10 +1231,12 @@ function ListRow({
   index: number;
 }) {
   const total = listTotal(list);
+  const spent = listSpent(list);
   const budget = list.budget;
   const ratio = budget ? Math.min(total / budget, 1) : 0;
   const over = budget !== null && total > budget;
   const near = budget !== null && total <= budget && total / budget > 0.8;
+
   return (
     <button
       className={`list-row ${active ? "active" : ""}`}
@@ -1125,7 +1244,9 @@ function ListRow({
       style={{ "--delay": `${index * 45}ms` } as React.CSSProperties}
     >
       <div
-        className={`type-icon type-${list.type.toLowerCase().replaceAll(" ", "-")}`}
+        className={`type-icon type-${list.type
+          .toLowerCase()
+          .replaceAll(" ", "-")}`}
       >
         <Icon
           name={
@@ -1146,8 +1267,16 @@ function ListRow({
         </div>
         <div className="list-meta">
           <span>{list.date}</span>
-          <i />{" "}
+          <i />
           <span>{list.items.filter((item) => !item.removed).length} items</span>
+          {spent > 0 && (
+            <>
+              <i />
+              <span style={{ color: "var(--primary)" }}>
+                {formatMoney(spent, list.currency, hidden)} spent
+              </span>
+            </>
+          )}
         </div>
         <div className={`budget-line ${over ? "over" : near ? "near" : ""}`}>
           <i style={{ transform: `scaleX(${ratio})` }} />
@@ -1180,26 +1309,94 @@ function ListDetail({
   update,
   addItem,
   removeItem,
+  onEditItem,
+  onDuplicateList,
+  onDeleteList,
+  onToggleHide,
 }: {
   list: PlanList;
   hidden: boolean;
   update: (fn: (list: PlanList) => PlanList) => void;
   addItem: () => void;
   removeItem: (id: string) => void;
+  onEditItem: (id: string) => void;
+  onDuplicateList: () => void;
+  onDeleteList: () => void;
+  onToggleHide: () => void;
 }) {
   const total = listTotal(list);
   const needs = listTotal(list, true);
-  const active = list.items.filter((item) => !item.removed);
+  const spent = listSpent(list);
+
+  const active = list.items.filter((item) => !item.removed && !item.bought);
+  const bought = list.items.filter((item) => item.bought && !item.removed);
   const removed = list.items.filter((item) => item.removed);
+
+  /* ---------- Live budget state ---------- */
+  const budget = list.budget;
+  const remaining = budget === null ? null : budget - total;
+  const over = remaining !== null && remaining < 0;
+  const near =
+    remaining !== null && remaining >= 0 && remaining < budget! * 0.2;
   const status =
-    list.budget === null
-      ? "total"
-      : total > list.budget
-        ? "over"
-        : total / list.budget > 0.8
-          ? "near"
-          : "healthy";
-  const difference = list.budget === null ? 0 : list.budget - total;
+    budget === null ? "total" : over ? "over" : near ? "near" : "healthy";
+
+  const [budgetDraft, setBudgetDraft] = useState(
+    budget === null ? "" : String(budget / 100),
+  );
+
+  useEffect(() => {
+    setBudgetDraft(budget === null ? "" : String(budget / 100));
+  }, [budget]);
+
+  const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    setBudgetDraft(raw);
+    update((current) => ({
+      ...current,
+      budget: raw.trim() ? parseAmount(raw) : null,
+    }));
+  };
+
+  const chipClass =
+    budget === null ? "neutral" : over ? "over" : near ? "near" : "left";
+  const chipText =
+    budget === null
+      ? "Set a budget"
+      : hidden
+        ? over
+          ? "Over budget"
+          : "On budget"
+        : over
+          ? `Over ${formatMoney(Math.abs(remaining!), list.currency, false)}`
+          : `Left ${formatMoney(remaining!, list.currency, false)}`;
+
+  const meterLabel =
+    budget === null
+      ? "Total planned"
+      : over
+        ? "Over budget by"
+        : "Left to spend";
+  const meterValue = budget === null ? total : Math.abs(remaining!);
+  const meterHint =
+    budget === null
+      ? `${active.length} planned item${active.length === 1 ? "" : "s"}`
+      : over
+        ? "Reduce some items or bump your budget"
+        : near
+          ? "You're close to your limit"
+          : "You're on track";
+
+  const ringProgress = budget ? Math.min((total / budget) * 360, 360) : 270;
+
+  const toggleBought = (itemId: string) =>
+    update((current) => ({
+      ...current,
+      items: current.items.map((entry) =>
+        entry.id === itemId ? { ...entry, bought: !entry.bought } : entry,
+      ),
+    }));
+
   return (
     <section className="list-detail">
       <div className="detail-title">
@@ -1215,45 +1412,71 @@ function ListDetail({
             }
           />
         </div>
-        <IconButton label="More options" icon="more" />
+        <ListMenu
+          listName={list.name}
+          onRename={() => {
+            const next = prompt("Rename list", list.name);
+            if (next && next.trim())
+              update((c) => ({ ...c, name: next.trim() }));
+          }}
+          onDuplicate={onDuplicateList}
+          onDelete={onDeleteList}
+          onHideAmounts={onToggleHide}
+          hideAmounts={hidden}
+        />
       </div>
+
+      {/* ---------- BUDGET METER with live inline input ---------- */}
       <div className={`budget-meter ${status}`}>
-        <div className="meter-copy">
-          <span>
-            {list.budget === null
-              ? "Total"
-              : difference >= 0
-                ? "Left"
-                : "Need more"}
+        <div className="meter-input-row">
+          <label className="meter-budget-input">
+            <span>I have</span>
+            <span className="meter-budget-symbol">
+              {getCurrencySymbol(list.currency)}
+            </span>
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="0"
+              value={budgetDraft}
+              onChange={handleBudgetChange}
+              aria-label="Budget amount"
+            />
+          </label>
+          <span className={`meter-status-chip ${chipClass}`}>
+            <i />
+            {chipText}
           </span>
-          <strong>
-            {formatMoney(
-              list.budget === null ? total : Math.abs(difference),
-              list.currency,
-              hidden,
-            )}
-          </strong>
-          <small>
-            {list.budget === null
-              ? `${active.length} planned items`
-              : difference >= 0
-                ? `Nice, you're ${formatMoney(difference, list.currency, hidden)} under budget`
-                : `A small edit can bring this plan in`}
-          </small>
+          <button
+            type="button"
+            className="meter-hide-btn"
+            onClick={onToggleHide}
+            aria-label={hidden ? "Show amounts" : "Hide amounts"}
+          >
+            <Icon name={hidden ? "eye" : "eye-off"} size={16} />
+          </button>
         </div>
-        <div
-          className="meter-ring"
-          style={
-            {
-              "--progress": `${list.budget ? Math.min(total / list.budget, 1) * 360 : 270}deg`,
-            } as React.CSSProperties
-          }
-        >
-          <span>
-            <Icon name={status === "over" ? "spark" : "check"} />
-          </span>
+
+        <div className="meter-body">
+          <div className="meter-copy">
+            <span>{meterLabel}</span>
+            <strong>{formatMoney(meterValue, list.currency, hidden)}</strong>
+            <small>{meterHint}</small>
+          </div>
+          <div
+            className="meter-ring"
+            style={
+              { "--progress": `${ringProgress}deg` } as React.CSSProperties
+            }
+          >
+            <span>
+              <Icon name={over ? "spark" : "check"} />
+            </span>
+          </div>
         </div>
       </div>
+
+      {/* ---------- Items (unbought) ---------- */}
       <div className="items-heading">
         <div>
           <h2>Items</h2>
@@ -1263,6 +1486,7 @@ function ListDetail({
           <Icon name="plus" /> Add item
         </Button>
       </div>
+
       {!active.length ? (
         <div className="items-empty">
           <span>
@@ -1275,6 +1499,13 @@ function ListDetail({
         <div className="item-list">
           {active.map((item) => (
             <div className="item-row" key={item.id}>
+              <button
+                className="buy-check"
+                aria-label={`Mark ${item.name} as bought`}
+                onClick={() => toggleBought(item.id)}
+              >
+                <Icon name="check" />
+              </button>
               <button
                 className="tag-dot"
                 aria-label={`Change ${item.name} tag`}
@@ -1299,14 +1530,21 @@ function ListDetail({
               >
                 <i className={item.tag.toLowerCase()} />
               </button>
-              <div>
-                <b>{item.name}</b>
-                <span>
-                  {item.quantity > 1
-                    ? `${item.quantity} × ${formatMoney(item.price, list.currency, hidden)}`
-                    : item.tag}
-                </span>
-              </div>
+              <button
+                type="button"
+                className="item-edit-btn"
+                onClick={() => onEditItem(item.id)}
+                aria-label={`Edit ${item.name}`}
+              >
+                <div>
+                  <b>{item.name}</b>
+                  <span>
+                    {item.quantity > 1
+                      ? `${item.quantity} × ${formatMoney(item.price, list.currency, hidden)}`
+                      : item.tag}
+                  </span>
+                </div>
+              </button>
               <strong>
                 {formatMoney(item.price * item.quantity, list.currency, hidden)}
               </strong>
@@ -1319,17 +1557,25 @@ function ListDetail({
           ))}
         </div>
       )}
+
+      {/* ---------- Totals ---------- */}
       {!!active.length && (
         <>
           <div className="totals">
             <div>
-              <span>Everything</span>
+              <span>Still to buy</span>
               <strong>{formatMoney(total, list.currency, hidden)}</strong>
             </div>
             <div>
               <span>Needs only</span>
               <strong>{formatMoney(needs, list.currency, hidden)}</strong>
             </div>
+            {spent > 0 && (
+              <div>
+                <span>Already spent</span>
+                <strong>{formatMoney(spent, list.currency, hidden)}</strong>
+              </div>
+            )}
           </div>
           <div className="reminder">
             <Icon name="spark" />
@@ -1337,6 +1583,38 @@ function ListDetail({
           </div>
         </>
       )}
+
+      {/* ---------- Bought items ---------- */}
+      {!!bought.length && (
+        <details className="removed" open>
+          <summary>
+            Bought <span>{bought.length}</span>
+            <b>
+              Spent{" "}
+              {formatMoney(
+                bought.reduce(
+                  (sum, item) => sum + item.price * item.quantity,
+                  0,
+                ),
+                list.currency,
+                hidden,
+              )}
+            </b>
+          </summary>
+          {bought.map((item) => (
+            <div className="removed-row" key={item.id}>
+              <span style={{ textDecoration: "line-through" }}>
+                {item.name}
+              </span>
+              <Button className="ghost" onClick={() => toggleBought(item.id)}>
+                Unmark
+              </Button>
+            </div>
+          ))}
+        </details>
+      )}
+
+      {/* ---------- Removed items ---------- */}
       {!!removed.length && (
         <details className="removed">
           <summary>
@@ -1356,21 +1634,37 @@ function ListDetail({
           {removed.map((item) => (
             <div className="removed-row" key={item.id}>
               <span>{item.name}</span>
-              <Button
-                className="ghost"
-                onClick={() =>
-                  update((current) => ({
-                    ...current,
-                    items: current.items.map((entry) =>
-                      entry.id === item.id
-                        ? { ...entry, removed: false }
-                        : entry,
-                    ),
-                  }))
-                }
-              >
-                Restore
-              </Button>
+              <div style={{ display: "flex", gap: 6 }}>
+                <Button
+                  className="ghost"
+                  onClick={() =>
+                    update((current) => ({
+                      ...current,
+                      items: current.items.map((entry) =>
+                        entry.id === item.id
+                          ? { ...entry, removed: false }
+                          : entry,
+                      ),
+                    }))
+                  }
+                >
+                  Restore
+                </Button>
+                <Button
+                  className="danger"
+                  onClick={() => {
+                    if (!confirm(`Permanently delete "${item.name}"?`)) return;
+                    update((current) => ({
+                      ...current,
+                      items: current.items.filter(
+                        (entry) => entry.id !== item.id,
+                      ),
+                    }));
+                  }}
+                >
+                  Delete
+                </Button>
+              </div>
             </div>
           ))}
         </details>
@@ -1391,6 +1685,11 @@ function SummaryPanel({
   otherLists: PlanList[];
 }) {
   const total = listTotal(list);
+  const spent = listSpent(list);
+  const budget = list.budget;
+  const remaining = budget === null ? null : budget - total;
+  const over = remaining !== null && remaining < 0;
+
   return (
     <aside className="summary-panel">
       <div className="panel-heading">
@@ -1399,33 +1698,32 @@ function SummaryPanel({
           <Icon name="check" /> Saved
         </div>
       </div>
-      <div className="have-field">
-        <span>I have</span>
-        <CurrencyInput
-          value={list.budget}
-          currency={list.currency}
-          onChange={(budget) => update((current) => ({ ...current, budget }))}
-        />
-        <small>Updates your plan instantly</small>
-      </div>
-      <div className="summary-lines">
+
+      {/* ---------- Numbers only, no input here ---------- */}
+      <div className="summary-lines" style={{ borderTop: 0, paddingTop: 0 }}>
         <div>
-          <span>Spent</span>
+          <span>Planned</span>
           <b>{formatMoney(total, list.currency, hidden)}</b>
         </div>
+        {spent > 0 && (
+          <div>
+            <span>Spent (bought)</span>
+            <b style={{ color: "var(--primary)" }}>
+              {formatMoney(spent, list.currency, hidden)}
+            </b>
+          </div>
+        )}
         <div className="accent">
-          <span>
-            {list.budget !== null && total > list.budget ? "Need" : "Left"}
-          </span>
-          <b>
-            {formatMoney(
-              list.budget === null ? 0 : Math.abs(list.budget - total),
-              list.currency,
-              hidden,
-            )}
+          <span>{budget === null ? "Budget" : over ? "Need" : "Left"}</span>
+          <b style={over ? { color: "var(--coral)" } : undefined}>
+            {budget === null
+              ? "Not set"
+              : formatMoney(Math.abs(remaining!), list.currency, hidden)}
           </b>
         </div>
       </div>
+
+      {/* ---------- Compare quick view ---------- */}
       <div className="panel-section">
         <div className="section-heading">
           <h3>Compare quick view</h3>
@@ -1442,6 +1740,8 @@ function SummaryPanel({
           <p className="muted">Create another list to compare what fits.</p>
         )}
       </div>
+
+      {/* ---------- Tip ---------- */}
       <div className="tip">
         <Icon name="spark" />
         <div>
@@ -1484,6 +1784,25 @@ function CurrencyInput({
 function CompareView({ data, hidden }: { data: AppData; hidden: boolean }) {
   const [amount, setAmount] = useState("");
   const available = parseAmount(amount);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  /* ---------- Auto-focus on mount ---------- */
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      inputRef.current?.focus();
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  /* ---------- Focus + scroll helper ---------- */
+  const focusInput = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.focus();
+    /* Scroll the field into view so the user sees it on mobile */
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   return (
     <section className="page-section">
       <div className="page-heading">
@@ -1492,14 +1811,28 @@ function CompareView({ data, hidden }: { data: AppData; hidden: boolean }) {
           <h1>Compare</h1>
           <p>See which plan fits what you have today.</p>
         </div>
-        <Field
-          label="If I have"
-          value={amount}
-          placeholder="Enter an amount"
-          inputMode="decimal"
-          onChange={(e) => setAmount(e.target.value)}
-        />
+
+        {/* ---------- If I have — clickable label + focusable input ---------- */}
+        <label
+          className="field compare-input-field"
+          onClick={(e) => {
+            /* Ensure clicking anywhere on the label focuses the input */
+            e.preventDefault();
+            focusInput();
+          }}
+        >
+          <span>If I have</span>
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="decimal"
+            placeholder="Enter an amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+        </label>
       </div>
+
       {!data.lists.length ? (
         <PageEmpty
           icon="compare"
@@ -1517,21 +1850,33 @@ function CompareView({ data, hidden }: { data: AppData; hidden: boolean }) {
                   <span>Option {index + 1}</span>
                   <Icon name={index === 0 ? "spark" : "lists"} />
                 </header>
-                <h2>{list.name}</h2>
+
+                {/* Mobile: title + price on one row. Desktop: stacked. */}
+                <div className="compare-card-mobile-row">
+                  <h2>{list.name}</h2>
+                  <strong>{formatMoney(total, list.currency, hidden)}</strong>
+                </div>
+
                 <p>
                   {list.items.filter((item) => !item.removed).length} items ·{" "}
                   {list.type}
                 </p>
-                <strong>{formatMoney(total, list.currency, hidden)}</strong>
-                <div
-                  className={`fit-result ${balance !== null && balance < 0 ? "over" : ""}`}
-                >
-                  {balance === null
-                    ? "Enter what you have"
-                    : balance >= 0
+
+                {balance === null ? (
+                  <button
+                    type="button"
+                    className="fit-result fit-result-prompt"
+                    onClick={focusInput}
+                  >
+                    Enter what you have
+                  </button>
+                ) : (
+                  <div className={`fit-result ${balance < 0 ? "over" : ""}`}>
+                    {balance >= 0
                       ? `Fits, ${formatMoney(balance, list.currency, hidden)} left`
                       : `Need ${formatMoney(Math.abs(balance), list.currency, hidden)} more`}
-                </div>
+                  </div>
+                )}
               </article>
             );
           })}
@@ -1663,6 +2008,30 @@ function InsightsView({ data }: { data: AppData }) {
         />
       ) : (
         <div className="insights-grid">
+          <SpendingBreakdown
+            needs={needs}
+            wants={data.lists.reduce(
+              (sum, l) =>
+                sum +
+                l.items
+                  .filter((i) => !i.removed && !i.bought && i.tag === "Want")
+                  .reduce((s, i) => s + i.price * i.quantity, 0),
+              0,
+            )}
+            maybe={data.lists.reduce(
+              (sum, l) =>
+                sum +
+                l.items
+                  .filter((i) => !i.removed && !i.bought && i.tag === "Maybe")
+                  .reduce((s, i) => s + i.price * i.quantity, 0),
+              0,
+            )}
+            bought={data.lists.reduce((sum, l) => sum + listSpent(l), 0)}
+            total={total}
+            formatMoney={formatMoney}
+            currency={data.currency}
+            hidden={data.hideAmounts}
+          />
           <article className="insight-stat">
             <span>Total planned</span>
             <strong>
@@ -2018,47 +2387,82 @@ function NewItemModal({
   const [quantity, setQuantity] = useState(1);
   const [tag, setTag] = useState<Tag>("Need");
   const [error, setError] = useState("");
+
+  const nameRef = useRef<HTMLInputElement>(null);
+  const priceRef = useRef<HTMLInputElement>(null);
+  const qtyRef = useRef<HTMLInputElement>(null);
+
+  const parsedPrice = parseAmount(price);
+  const priceValid = parsedPrice !== null && parsedPrice > 0;
+  const nameValid = name.trim().length > 0;
+  const qtyValid = quantity >= 1;
+  const canSubmit = nameValid && priceValid && qtyValid;
+
+  useEffect(() => {
+    if (!error) return;
+    if (!nameValid) nameRef.current?.focus();
+    else if (!priceValid) priceRef.current?.focus();
+    else if (!qtyValid) qtyRef.current?.focus();
+  }, [error, nameValid, priceValid, qtyValid]);
+
   function submit(event: React.FormEvent) {
     event.preventDefault();
-    const amount = parseAmount(price);
-    if (!name.trim()) return setError("Add an item name.");
-    if (amount === null) return setError("Enter a valid price.");
-    onSave({ id: uid(), name: name.trim(), price: amount, quantity, tag });
+    if (!nameValid) return setError("Add an item name.");
+    if (!priceValid) return setError("Enter a valid price.");
+    if (!qtyValid) return setError("Quantity must be at least 1.");
+    onSave({
+      id: uid(),
+      name: name.trim(),
+      price: parsedPrice!,
+      quantity,
+      tag,
+    });
     navigator.vibrate?.(20);
   }
+
   return (
     <Modal title="Add item" onClose={onClose}>
       <form className="modal-form" onSubmit={submit}>
-        <Field
-          label="Item name"
-          autoFocus
-          value={name}
-          placeholder="What are you considering?"
-          onChange={(e) => setName(e.target.value)}
-        />
-        <Field
-          label={`Price (${currency})`}
-          value={price}
-          inputMode="decimal"
-          placeholder="0.00"
-          hint="Calculator input works: 250*3 or 1200-200"
-          onChange={(e) => setPrice(e.target.value)}
-        />
-        <Field
-          label="Quantity"
-          type="number"
-          min="1"
-          max="99"
-          value={quantity}
-          onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-        />
+        <label className="field">
+          <span>Item name</span>
+          <input
+            ref={nameRef}
+            type="text"
+            value={name}
+            placeholder="What are you considering?"
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
+        <label className="field">
+          <span>Price ({getCurrencySymbol(currency)})</span>
+          <input
+            ref={priceRef}
+            type="text"
+            inputMode="decimal"
+            value={price}
+            placeholder="0.00"
+            onChange={(e) => setPrice(e.target.value)}
+          />
+          <small>Calculator input works: 250*3 or 1200-200</small>
+        </label>
+        <label className="field">
+          <span>Quantity</span>
+          <QuantityInput
+            value={quantity}
+            onChange={setQuantity}
+            invalid={!qtyValid}
+            inputRef={qtyRef}
+          />
+        </label>
         <fieldset className="tag-picker">
           <legend>Tag</legend>
           {(["Need", "Want", "Maybe"] as Tag[]).map((value) => (
             <Button
               type="button"
               key={value}
-              className={`tag-option ${value.toLowerCase()} ${tag === value ? "selected" : ""}`}
+              className={`tag-option ${value.toLowerCase()} ${
+                tag === value ? "selected" : ""
+              }`}
               onClick={() => setTag(value)}
             >
               <i />
@@ -2071,7 +2475,7 @@ function NewItemModal({
           <Button type="button" className="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" className="primary">
+          <Button type="submit" className="primary" disabled={!canSubmit}>
             Add item
           </Button>
         </div>

@@ -1,0 +1,184 @@
+/* =========================================================
+   TOAST — top-anchored, auto-dismissing, never stretched
+   ========================================================= */
+
+.toast {
+  position: fixed;
+  z-index: 150;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px 10px 14px;
+  min-width: 280px;
+  max-width: calc(100vw - 24px);
+  border-radius: 12px;
+  background: #16243a;
+  color: white;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: toastIn 320ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -16px) scale(0.96);
+  }
+}
+
+/* =========================================================
+   ICON — locked to exactly 22×22, always a circle
+   ========================================================= */
+
+.toast-icon {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  max-width: 22px;
+  max-height: 22px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  background: rgba(110, 231, 183, 0.15);
+  color: #6ee7b7;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.toast-icon svg {
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  min-height: 12px;
+  max-width: 12px;
+  max-height: 12px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.toast.toast-error .toast-icon {
+  background: rgba(251, 139, 139, 0.2);
+  color: #fb8b8b;
+}
+
+.toast.toast-info .toast-icon {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+}
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+.toast-message {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* =========================================================
+   CLOSE BUTTON — locked to exactly 28×28, always a circle
+   ========================================================= */
+
+.toast-close {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  max-width: 28px;
+  max-height: 28px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+  transition: 150ms ease;
+  line-height: 0;
+}
+
+.toast-close svg {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
+  max-width: 14px;
+  max-height: 14px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.toast-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* =========================================================
+   PROGRESS BAR
+   ========================================================= */
+
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: #6ee7b7;
+  transform-origin: left;
+  animation: toastProgress linear forwards;
+}
+
+.toast.toast-error .toast-progress {
+  background: #fb8b8b;
+}
+
+@keyframes toastProgress {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 767px) {
+  .toast {
+    top: calc(10px + env(safe-area-inset-top));
+    left: 12px;
+    right: 12px;
+    min-width: 0;
+    transform: none;
+    animation-name: toastInMobile;
+  }
+
+  @keyframes toastInMobile {
+    from {
+      opacity: 0;
+      transform: translateY(-16px) scale(0.96);
+    }
+  }
+}
