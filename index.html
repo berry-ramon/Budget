@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"
+    />
+
+    <!-- ===== PRIMARY SEO ===== -->
+    <title>Pocket Plan</title>
+    <meta
+      name="description"
+      content="A private, offline-first budgeting app. Plan lists for outings, compare what fits, track needs vs wants, and know what you can spend — before you spend it. Free, no signup. Your data stays on your device."
+    />
+    <meta
+      name="keywords"
+      content="budgeting app, private budgeting, offline budget planner, spending planner, shopping list budget, window shopping budget, needs vs wants, pocket plan, expense planner, kenya budget app, KES budget tracker, no signup budget"
+    />
+    <meta name="author" content="Brandon Kimathi" />
+    <meta name="application-name" content="Pocket Plan" />
+    <meta name="generator" content="Vite + React" />
+    <meta name="rating" content="general" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- ===== INDEXING — allow search engines ===== -->
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <meta name="googlebot" content="index, follow" />
+
+    <!-- ===== THEME ===== -->
+    <meta
+      name="theme-color"
+      content="#F8FAFC"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0F172A"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="msapplication-TileColor" content="#0F766E" />
+
+    <!-- ===== MOBILE / PWA ===== -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Pocket Plan" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- ===== DISCOVERY ===== -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="author" href="/humans.txt" />
+    <link rel="canonical" href="https://budget.brandonkimathi.top/" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    <meta
+      name="msapplication-TileImage"
+      content="/assets/icons/mstile-150x150.png"
+    />
+
+    <!-- ===== FAVICONS & APP ICONS (lowercase assets) ===== -->
+    <link rel="icon" type="image/x-icon" href="/assets/icons/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/assets/icons/favicon-16x16.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/assets/icons/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href="/assets/icons/favicon-48x48.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href="/assets/icons/favicon-96x96.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/assets/icons/apple-touch-icon.png"
+    />
+
+    <!-- ===== OPEN GRAPH ===== -->
+    <meta property="og:locale" content="en_KE" />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="Pocket Plan — Plan What You Spend Before You Spend It"
+    />
+    <meta
+      property="og:description"
+      content="Private, offline-first budgeting. Plan lists, compare what fits, track needs vs wants. No signup. Your data stays on your device."
+    />
+    <meta property="og:url" content="https://budget.brandonkimathi.top/" />
+    <meta property="og:site_name" content="Pocket Plan" />
+    <meta
+      property="og:image"
+      content="https://budget.brandonkimathi.top/assets/icons/icon-512x512.png"
+    />
+    <meta
+      property="og:image:secure_url"
+      content="https://budget.brandonkimathi.top/assets/icons/icon-512x512.png"
+    />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="Pocket Plan logo" />
+
+    <!-- ===== TWITTER CARD ===== -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Pocket Plan — Private Budgeting" />
+    <meta
+      name="twitter:description"
+      content="Plan before you spend. Offline-first. Private by design."
+    />
+    <meta
+      name="twitter:image"
+      content="https://budget.brandonkimathi.top/assets/icons/icon-512x512.png"
+    />
+    <meta name="twitter:image:alt" content="Pocket Plan logo" />
+    <meta name="twitter:creator" content="@brandonkimathi" />
+
+    <!-- ===== PRECONNECT ===== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://budget.brandonkimathi.top" />
+
+    <!-- ===== PRELOAD LCP IMAGE ===== -->
+    <link rel="preload" as="image" href="/assets/icons/logo.png" />
+
+    <!-- ===== FONTS ===== -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- ===== STRUCTURED DATA (JSON-LD @graph) ===== -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebApplication",
+            "@id": "https://budget.brandonkimathi.top/#app",
+            "name": "Pocket Plan",
+            "alternateName": "Pocket Plan — Private Budgeting",
+            "description": "A private, offline-first budgeting app. Plan lists for outings, compare what fits, track needs vs wants, and know what you can spend — before you spend it. Your data stays on your device.",
+            "url": "https://budget.brandonkimathi.top",
+            "applicationCategory": "FinanceApplication",
+            "applicationSubCategory": "Budgeting",
+            "operatingSystem": "Any (Web)",
+            "browserRequirements": "Requires JavaScript. Chrome, Edge, Firefox, or Safari 15+.",
+            "inLanguage": "en",
+            "isAccessibleForFree": true,
+            "isFamilyFriendly": true,
+            "softwareVersion": "1.0",
+            "image": "https://budget.brandonkimathi.top/assets/icons/icon-512x512.png",
+            "screenshot": [
+              "https://budget.brandonkimathi.top/assets/icons/screenshot-mobile.png",
+              "https://budget.brandonkimathi.top/assets/icons/screenshot-desktop.png"
+            ],
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "creator": {
+              "@id": "https://brandonkimathi.top/#person"
+            },
+            "featureList": [
+              "Plan lists for any outing",
+              "Live budget meter showing what's left or needed",
+              "Compare multiple lists at once",
+              "Tag items as Need, Want, or Maybe",
+              "Wishlist with no pressure",
+              "Works offline via service worker",
+              "Private by design — data stays on the device",
+              "Auto-detected currency"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://budget.brandonkimathi.top/#website",
+            "url": "https://budget.brandonkimathi.top",
+            "name": "Pocket Plan",
+            "description": "Private, offline-first budgeting app.",
+            "inLanguage": "en",
+            "publisher": {
+              "@id": "https://brandonkimathi.top/#person"
+            }
+          },
+          {
+            "@type": "Person",
+            "@id": "https://brandonkimathi.top/#person",
+            "name": "Brandon Kimathi",
+            "url": "https://brandonkimathi.top"
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

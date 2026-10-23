@@ -1,0 +1,38 @@
+# =========================================================
+# POCKET PLAN — robots.txt
+# https://budget.brandonkimathi.top
+# Personal tool — kept out of search engines
+# =========================================================
+
+User-agent: *
+Disallow: /
+
+# Allow social crawlers so link previews work when shared privately
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Facebot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Slackbot-LinkExpanding
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+Sitemap: https://budget.brandonkimathi.top/sitemap.xml

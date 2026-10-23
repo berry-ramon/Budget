@@ -1,0 +1,18 @@
+/* TEAM */
+Creator: Brandon Kimathi
+Contact: hello@brandonkimathi.top
+Location: Nairobi, Kenya
+Site: https://brandonkimathi.top
+
+/* SITE */
+Name: Pocket Plan
+Tagline: Plan what you spend before you spend it
+Standards: HTML5, CSS3, ES2020+
+Components: React 19, TypeScript, Vite, Tailwind CSS
+Fonts: Plus Jakarta Sans, Space Grotesk, Inter
+Storage: IndexedDB (local only)
+Doctype: HTML5
+
+/* PRINCIPLES */
+No backend. No tracking. No accounts.
+Your plans stay on your device.
