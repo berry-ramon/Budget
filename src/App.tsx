@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { usePWAInstall } from "./hooks/usePWAInstall";
 import { CurrencyPicker } from "./components/CurrencyPicker";
+import { getCurrencySymbol } from "./lib/currencies";
 
 type IconName =
   | "lists"
@@ -157,29 +158,24 @@ function uid() {
 
 function formatMoney(value: number, currency: string, hidden = false) {
   if (hidden) return "••••";
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-    maximumFractionDigits: ["JPY", "UGX", "RWF"].includes(currency) ? 0 : 2,
-  }).format(value / 100);
+  const amount = value / 100;
+  const noDecimals = ["JPY", "UGX", "RWF"].includes(currency);
+  let number: string;
+  try {
+    number = new Intl.NumberFormat(undefined, {
+      minimumFractionDigits: noDecimals ? 0 : 2,
+      maximumFractionDigits: noDecimals ? 0 : 2,
+    }).format(amount);
+  } catch {
+    number = amount.toFixed(noDecimals ? 0 : 2);
+  }
+  return `${getCurrencySymbol(currency)} ${number}`;
 }
 
 function listTotal(list: PlanList, needsOnly = false) {
   return list.items
     .filter((item) => !item.removed && (!needsOnly || item.tag === "Need"))
     .reduce((sum, item) => sum + item.price * item.quantity, 0);
-}
-
-function currencyOptions() {
-  try {
-    return (
-      (
-        Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] }
-      ).supportedValuesOf?.("currency") || ["USD", "EUR", "GBP", "KES"]
-    );
-  } catch {
-    return ["USD", "EUR", "GBP", "KES", "UGX", "TZS", "RWF", "JPY", "INR"];
-  }
 }
 
 function parseAmount(input: string) {
@@ -545,6 +541,7 @@ function Setup({
           <p>You can change these anytime in Settings.</p>
         </div>
         <div className="setup-fields">
+          {/* Setup screen — currency field */}
           <CurrencyPicker
             label="Your currency"
             value={currency}
