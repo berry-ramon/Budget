@@ -1,0 +1,288 @@
+/* =========================================================
+   PURCHASE MODAL + SAVINGS CARD
+   ========================================================= */
+
+.purchase-item-preview {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  margin-bottom: 16px;
+  display: grid;
+  gap: 2px;
+}
+
+.purchase-item-preview b {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.purchase-item-preview span {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.purchase-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 10px;
+}
+
+.purchase-add-vendor {
+  margin-top: 12px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.purchase-savings {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  display: grid;
+  gap: 3px;
+}
+
+.purchase-savings.saved {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.purchase-savings.over {
+  background: var(--coral-soft);
+  color: var(--coral);
+}
+
+.purchase-savings.same {
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+
+.purchase-savings b {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.purchase-savings span {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+/* ---------- Bought rows in ListDetail ---------- */
+
+.bought-row {
+  align-items: flex-start;
+  padding-block: 10px;
+  min-height: 56px;
+}
+
+.bought-row > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.bought-delta {
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.bought-delta.saved {
+  color: var(--primary);
+}
+
+.bought-delta.over {
+  color: var(--coral);
+}
+
+.bought-delta.same {
+  color: var(--muted);
+}
+
+/* ---------- Savings card in Insights ---------- */
+
+.savings-card {
+  grid-column: 1 / -1;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.savings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.savings-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.savings-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-family: var(--numbers);
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.savings-badge.positive {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.savings-badge.negative {
+  background: var(--coral-soft);
+  color: var(--coral);
+}
+
+.savings-summary {
+  display: grid;
+  gap: 8px;
+  padding: 14px 0;
+  border-block: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.savings-summary > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.savings-summary span {
+  color: var(--muted);
+}
+
+.savings-summary b {
+  font-family: var(--numbers);
+  font-weight: 700;
+}
+
+.savings-summary b.positive {
+  color: var(--primary);
+}
+
+.savings-summary b.negative {
+  color: var(--coral);
+}
+
+.savings-list {
+  margin-bottom: 16px;
+}
+
+.savings-list h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.savings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+.savings-row:last-child {
+  border-bottom: 0;
+}
+
+.savings-row span {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.savings-row b {
+  font-family: var(--numbers);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.savings-row b.positive {
+  color: var(--primary);
+}
+
+.savings-row b.negative {
+  color: var(--coral);
+}
+
+.savings-note {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--gold-soft);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.savings-note b {
+  color: var(--text);
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 767px) {
+  .savings-card {
+    padding: 18px;
+  }
+
+  .savings-summary > div {
+    font-size: 12.5px;
+  }
+
+  .purchase-inputs {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Price hint text ---------- */
+
+.purchase-price-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+/* ---------- Adaptive action buttons ---------- */
+
+.purchase-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.purchase-actions .button.full {
+  width: 100%;
+}
+
+/* Give the primary button a slightly larger tap target when it's
+   the "Paid as budgeted" fast-confirm variant */
+.purchase-actions .button.primary.full {
+  min-height: 48px;
+  font-size: 14px;
+}

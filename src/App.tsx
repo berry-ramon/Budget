@@ -17,6 +17,12 @@ import { ListMenu } from "./components/ListMenu";
 import { ListSwitcher } from "./components/ListSwitcher";
 import { SpendingBreakdown } from "./components/SpendingBreakdown";
 import { UpdatePrompt } from "./components/UpdatePrompt";
+import { SecuritySetup } from "./components/SecuritySetup";
+import { LockScreen } from "./components/LockScreen";
+import { AuthPrompt } from "./components/AuthPrompt";
+import { useAutoLock } from "./hooks/useAutoLock";
+import { PurchaseModal } from "./components/PurchaseModal";
+import { SavingsInsights } from "./components/SavingsInsights";
 
 type IconName =
   | "lists"
@@ -62,6 +68,10 @@ type Item = {
   tag: Tag;
   removed?: boolean;
   bought?: boolean;
+  actualPrice?: number;
+  actualQuantity?: number;
+  vendor?: string;
+  boughtAt?: number;
 };
 
 type PlanList = {
@@ -84,6 +94,14 @@ type Wish = {
   createdAt: number;
 };
 
+export type SecuritySettings = {
+  pinHash: string | null;
+  pinSalt: string | null;
+  biometricCredentialId: string | null;
+  biometricEnabled: boolean;
+  autoLockMinutes: number;
+};
+
 type AppData = {
   lists: PlanList[];
   wishes: Wish[];
@@ -91,6 +109,7 @@ type AppData = {
   theme: "system" | "light" | "dark";
   hideAmounts: boolean;
   setupComplete: boolean;
+  security: SecuritySettings; // ← NEW
 };
 
 const initialData: AppData = {
@@ -100,6 +119,13 @@ const initialData: AppData = {
   theme: "system",
   hideAmounts: false,
   setupComplete: false,
+  security: {
+    pinHash: null,
+    pinSalt: null,
+    biometricCredentialId: null,
+    biometricEnabled: false,
+    autoLockMinutes: 5,
+  },
 };
 
 const navItems: { label: View; icon: IconName }[] = [
@@ -197,12 +223,43 @@ function listTotal(list: PlanList, needsOnly = false) {
     )
     .reduce((sum, item) => sum + item.price * item.quantity, 0);
 }
+
+/* ---------- Actual purchase helpers ---------- */
+
+function itemPlannedTotal(item: Item): number {
+  return item.price * item.quantity;
+}
+
+function itemActualTotal(item: Item): number {
+  const qty = item.actualQuantity ?? item.quantity;
+  const unit = item.actualPrice ?? item.price;
+  return unit * qty;
+}
+
+function itemSavings(item: Item): number {
+  return itemPlannedTotal(item) - itemActualTotal(item);
+}
+
+/* listSpent — now uses ACTUAL prices where available */
 function listSpent(list: PlanList) {
   return list.items
     .filter((item) => item.bought && !item.removed)
-    .reduce((sum, item) => sum + item.price * item.quantity, 0);
+    .reduce((sum, item) => sum + itemActualTotal(item), 0);
 }
 
+/* listSavings — total saved (positive) or overspent (negative) */
+function listSavings(list: PlanList) {
+  return list.items
+    .filter((item) => item.bought && !item.removed)
+    .reduce((sum, item) => sum + itemSavings(item), 0);
+}
+
+/* listPlannedBought — what they were planning to spend on the bought items */
+function listPlannedBought(list: PlanList) {
+  return list.items
+    .filter((item) => item.bought && !item.removed)
+    .reduce((sum, item) => sum + itemPlannedTotal(item), 0);
+}
 function parseAmount(input: string) {
   const clean = input.replace(/,/g, "").trim();
   if (!/^\d+(?:\.\d+)?(?:\s*[+\-*\/]\s*\d+(?:\.\d+)?)*$/.test(clean))
@@ -568,17 +625,35 @@ function Setup({
 }) {
   const [currency, setCurrency] = useState(data.currency);
   const [theme, setTheme] = useState<AppData["theme"]>(data.theme);
+  const [phase, setPhase] = useState<"basics" | "security">("basics");
+
+  if (phase === "security") {
+    return (
+      <SecuritySetup
+        onCancel={() => setPhase("basics")}
+        onComplete={(sec) => {
+          onComplete({
+            ...data,
+            currency,
+            theme,
+            setupComplete: true,
+            security: sec,
+          });
+        }}
+      />
+    );
+  }
+
   return (
     <main className="setup-page">
       <section className="setup-panel">
         <Logo />
         <div className="setup-heading">
-          <span className="eyebrow">One quick setup</span>
+          <span className="eyebrow">Step 1 of 2</span>
           <h1>Make Pocket Plan yours</h1>
           <p>You can change these anytime in Settings.</p>
         </div>
         <div className="setup-fields">
-          {/* Setup screen — currency field */}
           <CurrencyPicker
             label="Your currency"
             value={currency}
@@ -605,13 +680,8 @@ function Setup({
             </p>
           </div>
         </div>
-        <Button
-          className="primary full"
-          onClick={() =>
-            onComplete({ ...data, currency, theme, setupComplete: true })
-          }
-        >
-          Start planning <Icon name="arrow" />
+        <Button className="primary full" onClick={() => setPhase("security")}>
+          Next: secure the app <Icon name="arrow" />
         </Button>
       </section>
     </main>
@@ -633,13 +703,27 @@ export default function App() {
   const [saved, setSaved] = useState(true);
   const selected =
     data.lists.find((list) => list.id === selectedId) || data.lists[0];
-
   const dismissToast = useCallback(() => setToast(""), []);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [unlocked, setUnlocked] = useState(false);
+  const [pendingShowAmounts, setPendingShowAmounts] = useState(false);
+
+  const [purchaseItemId, setPurchaseItemId] = useState<string | null>(null);
 
   useEffect(() => {
     loadData().then((stored) => {
-      if (stored) setData(stored);
+      if (stored) {
+        setData(stored);
+        if (stored.security.pinHash) {
+          const last = Number(
+            localStorage.getItem("pocket-plan-last-active") || 0,
+          );
+          const timeoutMs = stored.security.autoLockMinutes * 60 * 1000;
+          if (timeoutMs > 0 && last && Date.now() - last < timeoutMs) {
+            setUnlocked(true);
+          }
+        }
+      }
       setLoaded(true);
     });
     navigator.storage?.persist?.();
@@ -689,6 +773,12 @@ export default function App() {
   function update(next: Partial<AppData>) {
     setData((current) => ({ ...current, ...next }));
   }
+
+  useAutoLock({
+    enabled: unlocked && !!data.security.pinHash,
+    minutes: data.security.autoLockMinutes,
+    onLock: () => setUnlocked(false),
+  });
 
   function updateList(listId: string, transform: (list: PlanList) => PlanList) {
     update({
@@ -747,8 +837,48 @@ export default function App() {
   }
 
   function toggleHide() {
-    update({ hideAmounts: !data.hideAmounts });
+    if (data.hideAmounts) {
+      /* Currently hidden → require auth before revealing */
+      if (data.security.pinHash) {
+        setPendingShowAmounts(true);
+      } else {
+        update({ hideAmounts: false });
+      }
+    } else {
+      /* Currently visible → hide immediately, no auth needed */
+      update({ hideAmounts: true });
+    }
   }
+
+  function toggleBought(itemId: string) {
+    if (!selected) return;
+    const item = selected.items.find((i) => i.id === itemId);
+    if (!item) return;
+
+    if (item.bought) {
+      /* Unmark immediately — no modal */
+      updateList(selected.id, (list) => ({
+        ...list,
+        items: list.items.map((entry) =>
+          entry.id === itemId
+            ? {
+                ...entry,
+                bought: false,
+                actualPrice: undefined,
+                actualQuantity: undefined,
+                vendor: undefined,
+                boughtAt: undefined,
+              }
+            : entry,
+        ),
+      }));
+      setToast("Marked as not bought");
+    } else {
+      /* Open purchase modal */
+      setPurchaseItemId(itemId);
+    }
+  }
+
   if (!loaded)
     return (
       <div className="splash">
@@ -756,6 +886,7 @@ export default function App() {
         <div className="loader" />
       </div>
     );
+
   if (showTutorial)
     return (
       <Tutorial
@@ -765,8 +896,45 @@ export default function App() {
         }}
       />
     );
-  if (!data.setupComplete) return <Setup data={data} onComplete={setData} />;
 
+  /* New-user onboarding (currency + theme + security in one flow) */
+  if (!data.setupComplete)
+    return (
+      <Setup
+        data={data}
+        onComplete={(next) => {
+          setData(next);
+          setUnlocked(true);
+          localStorage.setItem("pocket-plan-last-active", String(Date.now()));
+        }}
+      />
+    );
+
+  /* Migration: existing users who upgraded before security was added */
+  if (!data.security.pinHash) {
+    return (
+      <SecuritySetup
+        onComplete={(sec) => {
+          update({ security: sec });
+          setUnlocked(true);
+          localStorage.setItem("pocket-plan-last-active", String(Date.now()));
+        }}
+      />
+    );
+  }
+
+  /* Returning users — show lock screen if not in auto-unlock grace period */
+  if (!unlocked) {
+    return (
+      <LockScreen
+        security={data.security}
+        onSuccess={() => {
+          setUnlocked(true);
+          localStorage.setItem("pocket-plan-last-active", String(Date.now()));
+        }}
+      />
+    );
+  }
   const filteredLists = data.lists.filter((list) =>
     list.name.toLowerCase().includes(search.toLowerCase()),
   );
@@ -868,6 +1036,8 @@ export default function App() {
               onDuplicateList={duplicateList}
               onDeleteList={deleteList}
               onToggleHide={toggleHide}
+              onToggleBought={toggleBought}
+              onEditPurchase={setPurchaseItemId}
             />
           )}
           {view === "Compare" && (
@@ -1019,8 +1189,62 @@ export default function App() {
             />
           );
         })()}
+      {purchaseItemId &&
+        selected &&
+        (() => {
+          const item = selected.items.find((i) => i.id === purchaseItemId);
+          if (!item) return null;
+          return (
+            <PurchaseModal
+              item={{
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                actualPrice: item.actualPrice,
+                actualQuantity: item.actualQuantity,
+                vendor: item.vendor,
+              }}
+              currencySymbol={getCurrencySymbol(selected.currency)}
+              parseAmount={parseAmount}
+              onConfirm={({ actualPrice, actualQuantity, vendor }) => {
+                updateList(selected.id, (list) => ({
+                  ...list,
+                  items: list.items.map((entry) =>
+                    entry.id === purchaseItemId
+                      ? {
+                          ...entry,
+                          bought: true,
+                          actualPrice,
+                          actualQuantity,
+                          vendor,
+                          boughtAt: Date.now(),
+                        }
+                      : entry,
+                  ),
+                }));
+                setPurchaseItemId(null);
+                setToast(`${item.name} recorded`);
+              }}
+              onCancel={() => setPurchaseItemId(null)}
+            />
+          );
+        })()}
       <InstallPrompt enabled={true} />
       <UpdatePrompt />
+
+      {pendingShowAmounts && data.security.pinHash && (
+        <AuthPrompt
+          title="Confirm it's you"
+          message="Authenticate to reveal your amounts."
+          security={data.security}
+          onSuccess={() => {
+            update({ hideAmounts: false });
+            setPendingShowAmounts(false);
+          }}
+          onCancel={() => setPendingShowAmounts(false)}
+        />
+      )}
 
       {toast && <Toast message={toast} onDismiss={dismissToast} />}
     </div>
@@ -1041,6 +1265,8 @@ function ListsView({
   onDuplicateList,
   onDeleteList,
   onToggleHide,
+  onToggleBought,
+  onEditPurchase,
 }: {
   data: AppData;
   lists: PlanList[];
@@ -1055,6 +1281,8 @@ function ListsView({
   onDuplicateList: (id: string) => void;
   onDeleteList: (id: string) => void;
   onToggleHide: () => void;
+  onToggleBought: (id: string) => void;
+  onEditPurchase: (id: string) => void;
 }) {
   if (!data.lists.length)
     return (
@@ -1110,7 +1338,6 @@ function ListsView({
             />
           ))}
         </div>
-        {/* ⚠️ REMOVED: the stray item-row block that was here */}
       </section>
 
       {selected && (
@@ -1124,6 +1351,8 @@ function ListsView({
           onDuplicateList={() => onDuplicateList(selected.id)}
           onDeleteList={() => onDeleteList(selected.id)}
           onToggleHide={onToggleHide}
+          onToggleBought={onToggleBought}
+          onEditPurchase={onEditPurchase}
         />
       )}
 
@@ -1313,6 +1542,8 @@ function ListDetail({
   onDuplicateList,
   onDeleteList,
   onToggleHide,
+  onToggleBought,
+  onEditPurchase,
 }: {
   list: PlanList;
   hidden: boolean;
@@ -1323,6 +1554,8 @@ function ListDetail({
   onDuplicateList: () => void;
   onDeleteList: () => void;
   onToggleHide: () => void;
+  onToggleBought: (id: string) => void;
+  onEditPurchase: (id: string) => void;
 }) {
   const total = listTotal(list);
   const needs = listTotal(list, true);
@@ -1332,7 +1565,6 @@ function ListDetail({
   const bought = list.items.filter((item) => item.bought && !item.removed);
   const removed = list.items.filter((item) => item.removed);
 
-  /* ---------- Live budget state ---------- */
   const budget = list.budget;
   const remaining = budget === null ? null : budget - total;
   const over = remaining !== null && remaining < 0;
@@ -1389,14 +1621,6 @@ function ListDetail({
 
   const ringProgress = budget ? Math.min((total / budget) * 360, 360) : 270;
 
-  const toggleBought = (itemId: string) =>
-    update((current) => ({
-      ...current,
-      items: current.items.map((entry) =>
-        entry.id === itemId ? { ...entry, bought: !entry.bought } : entry,
-      ),
-    }));
-
   return (
     <section className="list-detail">
       <div className="detail-title">
@@ -1426,7 +1650,7 @@ function ListDetail({
         />
       </div>
 
-      {/* ---------- BUDGET METER with live inline input ---------- */}
+      {/* BUDGET METER */}
       <div className={`budget-meter ${status}`}>
         <div className="meter-input-row">
           <label className="meter-budget-input">
@@ -1476,7 +1700,7 @@ function ListDetail({
         </div>
       </div>
 
-      {/* ---------- Items (unbought) ---------- */}
+      {/* Items */}
       <div className="items-heading">
         <div>
           <h2>Items</h2>
@@ -1502,7 +1726,7 @@ function ListDetail({
               <button
                 className="buy-check"
                 aria-label={`Mark ${item.name} as bought`}
-                onClick={() => toggleBought(item.id)}
+                onClick={() => onToggleBought(item.id)}
               >
                 <Icon name="check" />
               </button>
@@ -1558,7 +1782,7 @@ function ListDetail({
         </div>
       )}
 
-      {/* ---------- Totals ---------- */}
+      {/* Totals */}
       {!!active.length && (
         <>
           <div className="totals">
@@ -1584,7 +1808,7 @@ function ListDetail({
         </>
       )}
 
-      {/* ---------- Bought items ---------- */}
+      {/* Bought items */}
       {!!bought.length && (
         <details className="removed" open>
           <summary>
@@ -1592,29 +1816,62 @@ function ListDetail({
             <b>
               Spent{" "}
               {formatMoney(
-                bought.reduce(
-                  (sum, item) => sum + item.price * item.quantity,
-                  0,
-                ),
+                bought.reduce((sum, item) => sum + itemActualTotal(item), 0),
                 list.currency,
                 hidden,
               )}
+              {listSavings(list) !== 0 && (
+                <>
+                  {" · "}
+                  {listSavings(list) > 0
+                    ? `Saved ${formatMoney(listSavings(list), list.currency, hidden)}`
+                    : `Over ${formatMoney(Math.abs(listSavings(list)), list.currency, hidden)}`}
+                </>
+              )}
             </b>
           </summary>
-          {bought.map((item) => (
-            <div className="removed-row" key={item.id}>
-              <span style={{ textDecoration: "line-through" }}>
-                {item.name}
-              </span>
-              <Button className="ghost" onClick={() => toggleBought(item.id)}>
-                Unmark
-              </Button>
-            </div>
-          ))}
+          {bought.map((item) => {
+            const saved = itemSavings(item);
+            return (
+              <div className="removed-row" key={item.id}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <span style={{ textDecoration: "line-through" }}>
+                    {item.name}
+                  </span>
+                  {item.actualPrice !== undefined && (
+                    <small
+                      className={`bought-delta ${saved > 0 ? "saved" : saved < 0 ? "over" : "same"}`}
+                      style={{ display: "block", fontSize: "10.5px" }}
+                    >
+                      {saved === 0
+                        ? `Paid ${formatMoney(itemActualTotal(item), list.currency, hidden)}`
+                        : saved > 0
+                          ? `Saved ${formatMoney(saved, list.currency, hidden)}`
+                          : `Paid ${formatMoney(Math.abs(saved), list.currency, hidden)} extra`}
+                    </small>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <Button
+                    className="ghost"
+                    onClick={() => onEditPurchase(item.id)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    className="ghost"
+                    onClick={() => onToggleBought(item.id)}
+                  >
+                    Unmark
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
         </details>
       )}
 
-      {/* ---------- Removed items ---------- */}
+      {/* Removed items */}
       {!!removed.length && (
         <details className="removed">
           <summary>
@@ -2008,6 +2265,11 @@ function InsightsView({ data }: { data: AppData }) {
         />
       ) : (
         <div className="insights-grid">
+          <SavingsInsights
+            items={data.lists.flatMap((l) => l.items)}
+            currencySymbol={getCurrencySymbol(data.currency)}
+            hidden={data.hideAmounts}
+          />
           <SpendingBreakdown
             needs={needs}
             wants={data.lists.reduce(
@@ -2565,11 +2827,23 @@ async function openDB() {
 async function loadData() {
   try {
     const db = await openDB();
-    return await new Promise<AppData | undefined>((resolve) => {
+    const stored = await new Promise<AppData | undefined>((resolve) => {
       const request = db.transaction("app").objectStore("app").get("data");
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => resolve(undefined);
     });
+    /* Migration: records saved before the security feature existed
+       won't have a `security` field — add sensible defaults. */
+    if (stored && !stored.security) {
+      stored.security = {
+        pinHash: null,
+        pinSalt: null,
+        biometricCredentialId: null,
+        biometricEnabled: false,
+        autoLockMinutes: 5,
+      };
+    }
+    return stored;
   } catch {
     return undefined;
   }

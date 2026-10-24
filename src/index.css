@@ -7,6 +7,9 @@
 @import "./styles/inline-budget.css";
 @import "./styles/item-row.css";
 @import "./styles/compare.css";
+@import "./styles/security.css";
+@import "./styles/purchase.css";
+@import "./styles/savings.css";
 @import "tailwindcss";
 
 :root {

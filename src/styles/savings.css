@@ -1,0 +1,247 @@
+/* =========================================================
+   SAVINGS INSIGHTS CARD
+   ========================================================= */
+
+.savings-card {
+  grid-column: 1 / -1;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ---------- Header ---------- */
+
+.savings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.savings-header .eyebrow {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.savings-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.savings-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-family: var(--numbers);
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.savings-badge.positive {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.savings-badge.negative {
+  background: var(--coral-soft);
+  color: var(--coral);
+}
+
+/* ---------- Bar comparison ---------- */
+
+.savings-bars {
+  display: grid;
+  gap: 10px;
+  padding: 14px 0;
+  border-block: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+
+.savings-bar-row {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.savings-bar-label {
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.savings-bar-track {
+  height: 10px;
+  background: var(--surface-soft);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.savings-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transform-origin: left;
+  animation: savingsBarFill 500ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.savings-bar-fill.planned {
+  background: var(--muted);
+  opacity: 0.5;
+}
+
+.savings-bar-fill.actual {
+  background: var(--primary-bright);
+}
+
+@keyframes savingsBarFill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.savings-bar-value {
+  font-family: var(--numbers);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: right;
+  min-width: 80px;
+  white-space: nowrap;
+}
+
+/* ---------- Rate note ---------- */
+
+.savings-rate-note {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.savings-rate-note strong {
+  font-weight: 700;
+}
+
+.savings-rate-note strong.positive {
+  color: var(--primary);
+}
+
+.savings-rate-note strong.negative {
+  color: var(--coral);
+}
+
+/* ---------- Lists ---------- */
+
+.savings-list {
+  margin-bottom: 16px;
+}
+
+.savings-list:last-of-type {
+  margin-bottom: 14px;
+}
+
+.savings-list h4 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.savings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+.savings-row:last-child {
+  border-bottom: 0;
+}
+
+.savings-row-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.savings-row-count {
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+.savings-row b {
+  font-family: var(--numbers);
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.savings-row b.positive {
+  color: var(--primary);
+}
+
+.savings-row b.negative {
+  color: var(--coral);
+}
+
+/* ---------- Impulse warning ---------- */
+
+.savings-note {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--gold-soft);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.savings-note strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 767px) {
+  .savings-card {
+    padding: 18px;
+  }
+
+  .savings-bar-row {
+    grid-template-columns: 54px 1fr auto;
+    gap: 8px;
+  }
+
+  .savings-bar-label {
+    font-size: 10.5px;
+  }
+
+  .savings-bar-value {
+    font-size: 11px;
+    min-width: 68px;
+  }
+
+  .savings-header h3 {
+    font-size: 15px;
+  }
+
+  .savings-row {
+    font-size: 12px;
+  }
+}
